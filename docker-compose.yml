@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  postgres_new:
+    container_name: postgres_new
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: ${PG_DATABASE}
+      PGDATA: /data/postgres
+    ports:
+      - 127.0.0.1:5432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  redis_new:
+    container_name: redis_new
+    image: bitnami/redis:latest
+    restart: always
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - ${REDIS_PORT:-6379}:6379
+    volumes:
+      - redis:/data
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'redis-cli',
+          'ping',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres:
+    driver: local
+  redis:
+    driver: local
